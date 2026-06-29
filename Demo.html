@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMS — Business Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0D1117; --surface: #161B22; --surface2: #1C2128; --border: #30363D;
+  --accent: #F59E0B; --accent-dim: #78400a; --text: #E6EDF3; --muted: #8B949E;
+  --green: #3FB950; --red: #F85149; --blue: #58A6FF; --purple: #D2A8FF;
+  --orange: #FFA657; --sidebar-w: 220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:14px;border:none;outline:none}
+input,select,textarea{font-family:inherit;font-size:14px;outline:none}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:400px;max-width:95vw}
+.login-logo{font-family:'Syne',sans-serif;font-size:24px;color:var(--accent);letter-spacing:1px;margin-bottom:8px}
+.login-subtitle{color:var(--muted);font-size:13px;margin-bottom:32px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group select option{background:var(--surface)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:8px;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#d97706}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#2d1b1b;border:1px solid #4a1f1f;color:var(--red)}
+.btn-danger:hover{background:#3a2020}
+.btn-success{background:#1b2d1b;border:1px solid #1f4a1f;color:var(--green)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:12px}
+.login-roles{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.role-chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s}
+.role-chip:hover,.role-chip.active{border-color:var(--accent);color:var(--accent)}
+.login-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:16px}
+
+/* MAIN APP */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-brand{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.brand-name{font-family:'Syne',sans-serif;font-size:18px;color:var(--accent)}
+.brand-biz{font-size:11px;color:var(--muted);margin-top:2px}
+.sidebar-user{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+.user-info{overflow:hidden}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--muted)}
+.nav-section{padding:8px 0}
+.nav-label{font-size:10px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--muted);transition:all .15s;font-size:13px;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);background:#78400a22;border-left-color:var(--accent)}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.page-title{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.notif-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--muted);cursor:pointer;position:relative}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%}
+.content{padding:24px}
+
+/* CARDS & STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.stat-label{font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:700}
+.stat-change{font-size:11px;margin-top:4px}
+.stat-up{color:var(--green)} .stat-down{color:var(--red)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700}
+.chart-wrap{position:relative;width:100%;height:260px}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid #1c2128;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#1b2d1b;color:var(--green)}
+.badge-red{background:#2d1b1b;color:var(--red)}
+.badge-amber{background:#2d1f0a;color:var(--orange)}
+.badge-blue{background:#0d1f35;color:var(--blue)}
+.badge-purple{background:#1f1535;color:var(--purple)}
+.badge-gray{background:var(--surface2);color:var(--muted)}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row{display:flex;gap:12px}
+.section-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ALERTS */
+.alert{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.alert-warn{background:#2d1f0a;border:1px solid #78400a;color:var(--orange)}
+.alert-success{background:#1b2d1b;border:1px solid #1f4a1f;color:var(--green)}
+.alert-info{background:#0d1f35;border:1px solid #1a3a5c;color:var(--blue)}
+.alert-danger{background:#2d1b1b;border:1px solid #4a1f1f;color:var(--red)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);cursor:pointer}
+.modal-close:hover{color:var(--text)}
+
+/* MISC */
+.divider{height:1px;background:var(--border);margin:16px 0}
+.empty-state{text-align:center;padding:40px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.search-bar{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);width:220px}
+.search-bar:focus{border-color:var(--accent)}
+.progress-bar{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .3s}
+.tag{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:var(--surface2);color:var(--muted);margin:2px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:768px){
+  .two-col,.three-col,.form-grid{grid-template-columns:1fr}
+  .sidebar{width:60px} .brand-name,.brand-biz,.user-info,.nav-item span:not(.nav-icon),.nav-label,.nav-badge{display:none}
+  .nav-item{justify-content:center;padding:12px} .sidebar-user{justify-content:center}
+}
+.scroll-x{overflow-x:auto}
+
+/* ACTIVITY LOG */
+.log-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.log-text{font-size:13px} .log-time{font-size:11px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">◆ BMS</div>
+    <div class="login-subtitle">Business Management System · Kampala, UG</div>
+    <div class="form-group">
+      <label>Quick Login As</label>
+      <div class="login-roles">
+        <div class="role-chip active" onclick="selectRole(this,'Admin','admin@kla.ug')">👑 Admin</div>
+        <div class="role-chip" onclick="selectRole(this,'Manager','manager@kla.ug')">📋 Manager</div>
+        <div class="role-chip" onclick="selectRole(this,'Employee','staff@kla.ug')">👤 Employee</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="login-email" value="admin@kla.ug" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" value="••••••••" placeholder="Enter password">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In →</button>
+    <div class="login-hint">Demo: All roles use password <strong>admin123</strong></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-name">◆ BMS</div>
+        <div class="brand-biz" id="biz-name">Kampala Mart Ltd</div>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar" id="user-avatar">AD</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-nav">Admin User</div>
+          <div class="user-role" id="user-role-nav">Administrator</div>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+        <div class="nav-item" onclick="nav('sales')"><span class="nav-icon">💰</span><span>Sales</span></div>
+        <div class="nav-item" onclick="nav('orders')"><span class="nav-icon">📦</span><span>Orders</span></div>
+        <div class="nav-item" onclick="nav('inventory')"><span class="nav-icon">🗄️</span><span>Inventory</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">People</div>
+        <div class="nav-item" onclick="nav('customers')"><span class="nav-icon">👥</span><span>Customers</span></div>
+        <div class="nav-item" onclick="nav('suppliers')"><span class="nav-icon">🚚</span><span>Suppliers</span></div>
+        <div class="nav-item" onclick="nav('users')"><span class="nav-icon">🔑</span><span>Users</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Finance</div>
+        <div class="nav-item" onclick="nav('finance')"><span class="nav-icon">📈</span><span>Financial</span></div>
+        <div class="nav-item" onclick="nav('reports')"><span class="nav-icon">📋</span><span>Reports</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">System</div>
+        <div class="nav-item" onclick="nav('notifications')"><span class="nav-icon">🔔</span><span>Notifications</span><span class="nav-badge">5</span></div>
+        <div class="nav-item" onclick="nav('settings')"><span class="nav-icon">⚙️</span><span>Settings</span></div>
+        <div class="nav-item" onclick="doLogout()" style="margin-top:auto"><span class="nav-icon">🚪</span><span>Logout</span></div>
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="main">
+      <div class="topbar">
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="topbar-right">
+          <input class="search-bar" type="text" placeholder="🔍 Search anything…">
+          <button class="notif-btn" onclick="nav('notifications')">🔔<span class="notif-dot"></span></button>
+          <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+      <div class="content" id="content-area"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────
+const UGX = n => 'UGX ' + Math.round(n).toLocaleString();
+let currentUser = {name:'Admin User', role:'Admin', email:'admin@kla.ug'};
+let activeChart = null;
+
+const db = {
+  sales: [
+    {id:'TXN-001',date:'2026-03-23',customer:'Namara Grace',items:'Juice x4, Bread x2',method:'Mobile Money',amount:96000,status:'Completed'},
+    {id:'TXN-002',date:'2026-03-23',customer:'Okello Peter',items:'Snacks x10',method:'Cash',amount:45000,status:'Completed'},
+    {id:'TXN-003',date:'2026-03-22',customer:'Nassozi Faith',items:'Yogurt x6, Pastry x3',method:'Bank',amount:138000,status:'Completed'},
+    {id:'TXN-004',date:'2026-03-22',customer:'Mubiru James',items:'Juice x2',method:'Mobile Money',amount:28000,status:'Refunded'},
+    {id:'TXN-005',date:'2026-03-21',customer:'Nanteza Rita',items:'Cake x1, Bread x4',method:'Cash',amount:115000,status:'Completed'},
+    {id:'TXN-006',date:'2026-03-21',customer:'Ssekandi Tom',items:'Snacks x20',method:'Cash',amount:90000,status:'Pending'},
+    {id:'TXN-007',date:'2026-03-20',customer:'Akello Susan',items:'Yogurt x8',method:'Mobile Money',amount:176000,status:'Completed'},
+  ],
+  inventory: [
+    {id:'PRD-001',name:'Tropical Juice 500ml',category:'Beverages',qty:120,min:30,price:8000,supplier:'Ugafresh Ltd',status:'In Stock'},
+    {id:'PRD-002',name:'Chocolate Cake Slice',category:'Pastries',qty:18,min:20,price:12000,supplier:'Kampala Bakery',status:'Low Stock'},
+    {id:'PRD-003',name:'Yogurt 250g',category:'Dairy',qty:65,min:25,price:5500,supplier:'Pearl Dairies',status:'In Stock'},
+    {id:'PRD-004',name:'Cassava Crisps 100g',category:'Snacks',qty:8,min:15,price:3500,supplier:'Roma Foods',status:'Low Stock'},
+    {id:'PRD-005',name:'Mandazi x6 Pack',category:'Pastries',qty:42,min:20,price:7000,supplier:'Kampala Bakery',status:'In Stock'},
+    {id:'PRD-006',name:'Mineral Water 1L',category:'Beverages',qty:0,min:50,price:2500,supplier:'Rwenzori Co.',status:'Out of Stock'},
+    {id:'PRD-007',name:'Groundnut Paste 250g',category:'Spreads',qty:33,min:15,price:9000,supplier:'Roma Foods',status:'In Stock'},
+    {id:'PRD-008',name:'Bread 800g Loaf',category:'Bakery',qty:55,min:20,price:6500,supplier:'Kampala Bakery',status:'In Stock'},
+  ],
+  customers: [
+    {id:'CUS-001',name:'Namara Grace',phone:'+256 772 123456',email:'grace@email.com',purchases:24,total:1240000,lastVisit:'2026-03-23',loyalty:'Gold'},
+    {id:'CUS-002',name:'Okello Peter',phone:'+256 704 654321',email:'peter@email.com',purchases:9,total:430000,lastVisit:'2026-03-23',loyalty:'Silver'},
+    {id:'CUS-003',name:'Nassozi Faith',phone:'+256 756 789012',email:'faith@email.com',purchases:17,total:820000,lastVisit:'2026-03-22',loyalty:'Gold'},
+    {id:'CUS-004',name:'Mubiru James',phone:'+256 700 345678',email:'james@email.com',purchases:5,total:185000,lastVisit:'2026-03-22',loyalty:'Bronze'},
+    {id:'CUS-005',name:'Nanteza Rita',phone:'+256 771 901234',email:'rita@email.com',purchases:31,total:2100000,lastVisit:'2026-03-21',loyalty:'Platinum'},
+    {id:'CUS-006',name:'Ssekandi Tom',phone:'+256 753 567890',email:'tom@email.com',purchases:3,total:120000,lastVisit:'2026-03-21',loyalty:'Bronze'},
+  ],
+  suppliers: [
+    {id:'SUP-001',name:'Ugafresh Ltd',contact:'Mr. Kato',phone:'+256 414 223344',items:12,lastOrder:'2026-03-18',balance:450000,status:'Active'},
+    {id:'SUP-002',name:'Kampala Bakery',contact:'Ms. Namutebi',phone:'+256 772 445566',items:8,lastOrder:'2026-03-20',balance:0,status:'Active'},
+    {id:'SUP-003',name:'Pearl Dairies',contact:'Mr. Mwesige',phone:'+256 414 667788',items:5,lastOrder:'2026-03-15',balance:125000,status:'Active'},
+    {id:'SUP-004',name:'Roma Foods',contact:'Ms. Auma',phone:'+256 700 889900',items:15,lastOrder:'2026-03-10',balance:780000,status:'Overdue'},
+    {id:'SUP-005',name:'Rwenzori Co.',contact:'Mr. Tumusiime',phone:'+256 782 112233',items:3,lastOrder:'2026-03-01',balance:0,status:'Inactive'},
+  ],
+  orders: [
+    {id:'ORD-001',customer:'Nanteza Rita',date:'2026-03-23',items:'Juice x12, Yogurt x6',total:186000,status:'Pending',delivery:'Delivery'},
+    {id:'ORD-002',customer:'Namara Grace',date:'2026-03-22',items:'Bread x10, Butter x3',total:105000,status:'Processing',delivery:'Pickup'},
+    {id:'ORD-003',customer:'Akello Susan',date:'2026-03-21',items:'Cake Slice x5, Juice x4',total:92000,status:'Completed',delivery:'Delivery'},
+    {id:'ORD-004',customer:'Ssekandi Tom',date:'2026-03-20',items:'Snacks assorted x30',total:135000,status:'Cancelled',delivery:'Pickup'},
+    {id:'ORD-005',customer:'Okello Peter',date:'2026-03-20',items:'Yogurt x10, Crisps x5',total:107500,status:'Completed',delivery:'Delivery'},
+  ],
+  expenses: [
+    {id:'EXP-001',date:'2026-03-22',category:'Utilities',desc:'Electricity bill',amount:180000},
+    {id:'EXP-002',date:'2026-03-20',category:'Supplies',desc:'Packaging materials',amount:95000},
+    {id:'EXP-003',date:'2026-03-18',category:'Rent',desc:'Monthly shop rent',amount:600000},
+    {id:'EXP-004',date:'2026-03-15',category:'Staff',desc:'Staff wages',amount:1200000},
+    {id:'EXP-005',date:'2026-03-10',category:'Marketing',desc:'Social media ads',amount:75000},
+  ],
+  users: [
+    {id:'USR-001',name:'Admin User',email:'admin@kla.ug',role:'Admin',status:'Active',lastLogin:'2026-03-23'},
+    {id:'USR-002',name:'Sarah Manager',email:'manager@kla.ug',role:'Manager',status:'Active',lastLogin:'2026-03-23'},
+    {id:'USR-003',name:'John Staff',email:'staff@kla.ug',role:'Employee',status:'Active',lastLogin:'2026-03-22'},
+    {id:'USR-004',name:'Mary Cashier',email:'cashier@kla.ug',role:'Employee',status:'Active',lastLogin:'2026-03-21'},
+    {id:'USR-005',name:'Old Account',email:'old@kla.ug',role:'Employee',status:'Inactive',lastLogin:'2026-01-10'},
+  ]
+};
+
+const weeklySales = [520000,680000,890000,1100000,760000,940000,1350000];
+const monthlySales = [8200000,9400000,7800000,10500000,11200000,9800000,12400000,10900000,13200000,11800000,14500000,13100000];
+const weeklyLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const monthLabels = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+
+// ─── AUTH ────────────────────────────────────────────────────────────
+function selectRole(el, role, email) {
+  document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('login-email').value = email;
+  currentUser.role = role;
+}
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) { alert('Please enter email and password'); return; }
+  currentUser.email = email;
+  currentUser.name = currentUser.role === 'Admin' ? 'Admin User' : currentUser.role === 'Manager' ? 'Sarah Manager' : 'John Staff';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name-nav').textContent = currentUser.name;
+  document.getElementById('user-role-nav').textContent = currentUser.role;
+  document.getElementById('user-avatar').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  nav('dashboard');
+}
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────
+function nav(section) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {dashboard:0,sales:1,orders:2,inventory:3,customers:4,suppliers:5,users:6,finance:7,reports:8,notifications:9,settings:10};
+  const items = document.querySelectorAll('.nav-item');
+  if (items[map[section]]) items[map[section]].classList.add('active');
+  const titles = {dashboard:'Dashboard',sales:'Sales & Transactions',orders:'Order Management',inventory:'Inventory / Stock',customers:'Customer Management',suppliers:'Supplier Management',users:'User Management',finance:'Financial Management',reports:'Reports',notifications:'Notifications & Alerts',settings:'System Settings'};
+  document.getElementById('page-title').textContent = titles[section] || section;
+  if (activeChart) { activeChart.destroy(); activeChart = null; }
+  const renders = {dashboard:renderDashboard,sales:renderSales,orders:renderOrders,inventory:renderInventory,customers:renderCustomers,suppliers:renderSuppliers,users:renderUsers,finance:renderFinance,reports:renderReports,notifications:renderNotifications,settings:renderSettings};
+  if (renders[section]) renders[section]();
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────
+function openModal(title, html) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// ─── STATUS BADGES ───────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = {Completed:'badge-green',Active:'badge-green',Paid:'badge-green','In Stock':'badge-green',Gold:'badge-amber',Platinum:'badge-purple',Silver:'badge-blue',Pending:'badge-amber',Processing:'badge-blue',Low:'badge-amber','Low Stock':'badge-amber','Out of Stock':'badge-red',Refunded:'badge-red',Cancelled:'badge-red',Inactive:'badge-gray',Overdue:'badge-red',Bronze:'badge-gray'};
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────
+function renderDashboard() {
+  const totalSales = db.sales.filter(s=>s.status==='Completed').reduce((a,b)=>a+b.amount,0);
+  const totalExpenses = db.expenses.reduce((a,b)=>a+b.amount,0);
+  const profit = totalSales - totalExpenses;
+  document.getElementById('content-area').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Total Sales (March)</div><div class="stat-value" style="color:var(--accent)">${UGX(totalSales)}</div><div class="stat-change stat-up">↑ 18% vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Net Profit</div><div class="stat-value" style="color:var(--green)">${UGX(profit)}</div><div class="stat-change stat-up">↑ 12% vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-value" style="color:var(--red)">${UGX(totalExpenses)}</div><div class="stat-change stat-down">↑ 5% vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Customers</div><div class="stat-value">${db.customers.length}</div><div class="stat-change stat-up">↑ 3 new this week</div></div>
+      <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value">${db.sales.length}</div><div class="stat-change stat-up">↑ 22% this week</div></div>
+      <div class="stat-card"><div class="stat-label">Low Stock Items</div><div class="stat-value" style="color:var(--orange)">${db.inventory.filter(i=>i.status!=='In Stock').length}</div><div class="stat-change stat-down">Needs reorder</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Weekly Sales (UGX)</div><select style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:12px"><option>This Week</option><option>Last Week</option></select></div>
+        <div class="chart-wrap"><canvas id="chartWeekly"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Monthly Revenue (UGX)</div><span style="font-size:12px;color:var(--muted)">Last 12 months</span></div>
+        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Transactions</div><button class="btn btn-ghost btn-sm" onclick="nav('sales')">View All</button></div>
+        <div class="table-wrap"><table>
+          <tr><th>ID</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+          ${db.sales.slice(0,5).map(s=>`<tr><td style="color:var(--muted)">${s.id}</td><td>${s.customer}</td><td style="color:var(--accent);font-weight:600">${UGX(s.amount)}</td><td>${statusBadge(s.status)}</td></tr>`).join('')}
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Stock Alerts</div><button class="btn btn-ghost btn-sm" onclick="nav('inventory')">View All</button></div>
+        ${db.inventory.filter(i=>i.status!=='In Stock').map(i=>`
+          <div class="alert ${i.status==='Out of Stock'?'alert-danger':'alert-warn'}" style="margin-bottom:8px">
+            <span>${i.status==='Out of Stock'?'🔴':'🟡'}</span>
+            <div><strong>${i.name}</strong><br><span style="font-size:12px">${i.status} — ${i.qty} units left (min: ${i.min})</span></div>
+          </div>`).join('')}
+        <div class="card">
+          <div class="card-header" style="margin:0"><div class="card-title" style="font-size:13px">Sales by Category</div></div>
+          <div style="position:relative;height:130px;margin-top:8px"><canvas id="chartPie"></canvas></div>
+        </div>
+      </div>
+    </div>`;
+  
+  setTimeout(() => {
+    const barCfg = (labels, data, color) => ({
+      type:'bar', data:{labels, datasets:[{data, backgroundColor: color+'33', borderColor: color, borderWidth:1.5, borderRadius:4}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B949E',font:{size:11}},grid:{color:'#30363D22'}},y:{ticks:{color:'#8B949E',font:{size:11},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000)+'K':v},grid:{color:'#30363D55'}}}}
+    });
+    new Chart(document.getElementById('chartWeekly'), barCfg(weeklyLabels, weeklySales, '#F59E0B'));
+    new Chart(document.getElementById('chartMonthly'), barCfg(monthLabels, monthlySales, '#58A6FF'));
+    new Chart(document.getElementById('chartPie'), {
+      type:'doughnut', data:{labels:['Beverages','Pastries','Dairy','Snacks','Other'],
+      datasets:[{data:[35,25,20,12,8],backgroundColor:['#F59E0B','#3FB950','#58A6FF','#D2A8FF','#8B949E'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8B949E',font:{size:11},boxWidth:10}}}}
+    });
+  }, 100);
+}
+
+// ─── SALES ───────────────────────────────────────────────────────────
+function renderSales() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions">
+        <input class="search-bar" placeholder="🔍 Search transactions…">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)"><option>All Methods</option><option>Cash</option><option>Mobile Money</option><option>Bank</option></select>
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-primary" onclick="openSaleModal()">+ New Sale</button>
+        <button class="btn btn-ghost btn-sm">Export PDF</button>
+      </div>
+    </div>
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-label">Today's Sales</div><div class="stat-value" style="color:var(--accent)">${UGX(141000)}</div></div>
+      <div class="stat-card"><div class="stat-label">Transactions Today</div><div class="stat-value">2</div></div>
+      <div class="stat-card"><div class="stat-label">Avg. Transaction</div><div class="stat-value">${UGX(70500)}</div></div>
+      <div class="stat-card"><div class="stat-label">Refunds</div><div class="stat-value" style="color:var(--red)">1</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Transaction History</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Date</th><th>Customer</th><th>Items</th><th>Payment</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+      ${db.sales.map(s=>`<tr>
+        <td style="color:var(--muted);font-family:monospace">${s.id}</td>
+        <td style="color:var(--muted)">${s.date}</td>
+        <td><strong>${s.customer}</strong></td>
+        <td style="color:var(--muted);font-size:12px">${s.items}</td>
+        <td>${s.method}</td>
+        <td style="color:var(--accent);font-weight:700">${UGX(s.amount)}</td>
+        <td>${statusBadge(s.status)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewReceipt('${s.id}')">Receipt</button></td>
+      </tr>`).join('')}
+    </table></div></div>`;
+}
+function openSaleModal() {
+  openModal('Record New Sale', `
+    <div class="form-group"><label>Customer</label>
+      <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text)">
+        <option>-- Walk-in Customer --</option>
+        ${db.customers.map(c=>`<option>${c.name}</option>`).join('')}
+      </select></div>
+    <div class="form-group"><label>Items / Description</label><input type="text" placeholder="e.g. Juice x2, Bread x3" style="width:100%"></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Amount (UGX)</label><input type="number" placeholder="0" style="width:100%"></div>
+      <div class="form-group"><label>Payment Method</label>
+        <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text)">
+          <option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option>
+        </select></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea placeholder="Optional notes…" style="width:100%;height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);resize:vertical"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="alert('Sale recorded! ✓');closeModal()">Record Sale + Print Receipt</button>
+    </div>`);
+}
+function viewReceipt(id) {
+  const s = db.sales.find(x=>x.id===id);
+  if(!s) return;
+  openModal('Receipt — ' + s.id, `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;color:var(--accent)">◆ BMS</div>
+      <div style="color:var(--muted);font-size:12px">Kampala Mart Ltd · Tel: +256 414 000000</div>
+    </div>
+    <div class="divider"></div>
+    <table style="width:100%;font-size:13px">
+      <tr><td style="color:var(--muted)">Receipt No.</td><td style="text-align:right;font-weight:600">${s.id}</td></tr>
+      <tr><td style="color:var(--muted)">Date</td><td style="text-align:right">${s.date}</td></tr>
+      <tr><td style="color:var(--muted)">Customer</td><td style="text-align:right">${s.customer}</td></tr>
+      <tr><td style="color:var(--muted)">Items</td><td style="text-align:right">${s.items}</td></tr>
+      <tr><td style="color:var(--muted)">Payment</td><td style="text-align:right">${s.method}</td></tr>
+    </table>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;padding:8px 0">
+      <span>TOTAL</span><span style="color:var(--accent)">${UGX(s.amount)}</span>
+    </div>
+    <div class="divider"></div>
+    <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Thank you for shopping with us! 🙏</div>
+    <div style="margin-top:16px;text-align:right">
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
+    </div>`);
+}
+
+// ─── ORDERS ──────────────────────────────────────────────────────────
+function renderOrders() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions"><input class="search-bar" placeholder="🔍 Search orders…"></div>
+      <button class="btn btn-primary" onclick="openModal('Create New Order','<p style=color:var(--muted)>Order form coming soon.</p>')">+ Create Order</button>
+    </div>
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--orange)">${db.orders.filter(o=>o.status==='Pending').length}</div></div>
+      <div class="stat-card"><div class="stat-label">Processing</div><div class="stat-value" style="color:var(--blue)">${db.orders.filter(o=>o.status==='Processing').length}</div></div>
+      <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value" style="color:var(--green)">${db.orders.filter(o=>o.status==='Completed').length}</div></div>
+      <div class="stat-card"><div class="stat-label">Cancelled</div><div class="stat-value" style="color:var(--red)">${db.orders.filter(o=>o.status==='Cancelled').length}</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">All Orders</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Delivery</th><th>Status</th><th>Action</th></tr>
+      ${db.orders.map(o=>`<tr>
+        <td style="color:var(--muted);font-family:monospace">${o.id}</td>
+        <td><strong>${o.customer}</strong></td>
+        <td style="color:var(--muted)">${o.date}</td>
+        <td style="font-size:12px;color:var(--muted)">${o.items}</td>
+        <td style="font-weight:700;color:var(--accent)">${UGX(o.total)}</td>
+        <td><span class="tag">${o.delivery}</span></td>
+        <td>${statusBadge(o.status)}</td>
+        <td><button class="btn btn-ghost btn-sm">Track</button></td>
+      </tr>`).join('')}
+    </table></div></div>`;
+}
+
+// ─── INVENTORY ───────────────────────────────────────────────────────
+function renderInventory() {
+  const lowStock = db.inventory.filter(i=>i.status!=='In Stock');
+  document.getElementById('content-area').innerHTML = `
+    ${lowStock.length>0?`<div class="alert alert-warn"><span>⚠️</span><strong>${lowStock.length} items need attention:</strong> ${lowStock.map(i=>i.name).join(', ')}</div>`:''}
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions">
+        <input class="search-bar" placeholder="🔍 Search products…">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)">
+          <option>All Categories</option><option>Beverages</option><option>Pastries</option><option>Dairy</option><option>Snacks</option>
+        </select>
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-primary" onclick="openAddProductModal()">+ Add Product</button>
+        <button class="btn btn-ghost btn-sm">Export</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Stock Levels</div><span style="font-size:12px;color:var(--muted)">${db.inventory.length} products</span></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Product</th><th>Category</th><th>Stock</th><th>Min Level</th><th>Stock Level</th><th>Unit Price</th><th>Supplier</th><th>Status</th><th>Actions</th></tr>
+      ${db.inventory.map(p=>{
+        const pct=Math.round((p.qty/Math.max(p.min*3,1))*100);
+        const col=p.status==='In Stock'?'var(--green)':p.status==='Low Stock'?'var(--orange)':'var(--red)';
+        return `<tr>
+          <td style="color:var(--muted);font-size:12px">${p.id}</td>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="tag">${p.category}</span></td>
+          <td style="font-weight:700">${p.qty}</td>
+          <td style="color:var(--muted)">${p.min}</td>
+          <td style="min-width:100px"><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%;background:${col}"></div></div><span style="font-size:10px;color:var(--muted)">${Math.min(pct,100)}%</span></td>
+          <td style="color:var(--accent)">${UGX(p.price)}</td>
+          <td style="font-size:12px;color:var(--muted)">${p.supplier}</td>
+          <td>${statusBadge(p.status)}</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm">Edit</button>
+            <button class="btn btn-danger btn-sm">Del</button>
+          </td>
+        </tr>`;}).join('')}
+    </table></div></div>`;
+}
+function openAddProductModal() {
+  openModal('Add New Product', `
+    <div class="form-grid">
+      <div class="form-group"><label>Product Name</label><input type="text" style="width:100%" placeholder="e.g. Tropical Juice"></div>
+      <div class="form-group"><label>Category</label>
+        <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text)">
+          <option>Beverages</option><option>Pastries</option><option>Dairy</option><option>Snacks</option><option>Bakery</option><option>Spreads</option>
+        </select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Quantity</label><input type="number" style="width:100%" placeholder="0"></div>
+      <div class="form-group"><label>Min Stock Level</label><input type="number" style="width:100%" placeholder="10"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Unit Price (UGX)</label><input type="number" style="width:100%" placeholder="0"></div>
+      <div class="form-group"><label>Supplier</label>
+        <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text)">
+          ${db.suppliers.map(s=>`<option>${s.name}</option>`).join('')}
+        </select></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="alert('Product added! ✓');closeModal()">Save Product</button>
+    </div>`);
+}
+
+// ─── CUSTOMERS ───────────────────────────────────────────────────────
+function renderCustomers() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions"><input class="search-bar" placeholder="🔍 Search customers…"></div>
+      <button class="btn btn-primary" onclick="openModal('Register Customer','<p style=color:var(--muted)>Customer registration form.</p>')">+ Add Customer</button>
+    </div>
+    <div class="stat-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">${db.customers.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Platinum</div><div class="stat-value" style="color:var(--purple)">${db.customers.filter(c=>c.loyalty==='Platinum').length}</div></div>
+      <div class="stat-card"><div class="stat-label">Gold</div><div class="stat-value" style="color:var(--accent)">${db.customers.filter(c=>c.loyalty==='Gold').length}</div></div>
+      <div class="stat-card"><div class="stat-label">New This Month</div><div class="stat-value" style="color:var(--green)">3</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Customer Directory</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Purchases</th><th>Total Spend</th><th>Last Visit</th><th>Loyalty</th><th>Actions</th></tr>
+      ${db.customers.map(c=>`<tr>
+        <td style="color:var(--muted);font-size:12px">${c.id}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:28px;height:28px;font-size:11px">${c.name.split(' ').map(w=>w[0]).join('')}</div><strong>${c.name}</strong></div></td>
+        <td style="color:var(--muted)">${c.phone}</td>
+        <td style="color:var(--blue)">${c.email}</td>
+        <td style="text-align:center">${c.purchases}</td>
+        <td style="color:var(--accent);font-weight:700">${UGX(c.total)}</td>
+        <td style="color:var(--muted)">${c.lastVisit}</td>
+        <td>${statusBadge(c.loyalty)}</td>
+        <td><button class="btn btn-ghost btn-sm">History</button></td>
+      </tr>`).join('')}
+    </table></div></div>`;
+}
+
+// ─── SUPPLIERS ───────────────────────────────────────────────────────
+function renderSuppliers() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions"><input class="search-bar" placeholder="🔍 Search suppliers…"></div>
+      <button class="btn btn-primary" onclick="openModal('Add Supplier','<p style=color:var(--muted)>Supplier registration form.</p>')">+ Add Supplier</button>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Supplier Directory</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Company</th><th>Contact</th><th>Phone</th><th>Products</th><th>Last Order</th><th>Outstanding</th><th>Status</th><th>Actions</th></tr>
+      ${db.suppliers.map(s=>`<tr>
+        <td style="color:var(--muted);font-size:12px">${s.id}</td>
+        <td><strong>${s.name}</strong></td>
+        <td style="color:var(--muted)">${s.contact}</td>
+        <td>${s.phone}</td>
+        <td style="text-align:center">${s.items}</td>
+        <td style="color:var(--muted)">${s.lastOrder}</td>
+        <td style="color:${s.balance>0?'var(--red)':'var(--green)'};font-weight:700">${s.balance>0?UGX(s.balance):'Settled'}</td>
+        <td>${statusBadge(s.status)}</td>
+        <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm">Order</button><button class="btn btn-ghost btn-sm">Pay</button></td>
+      </tr>`).join('')}
+    </table></div></div>`;
+}
+
+// ─── USERS ───────────────────────────────────────────────────────────
+function renderUsers() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="alert alert-info" style="margin-bottom:16px"><span>🔒</span>User management is restricted to Administrators only.</div>
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions"><input class="search-bar" placeholder="🔍 Search users…"></div>
+      <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">System Users</div><span style="font-size:12px;color:var(--muted)">${db.users.length} users</span></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Permissions</th><th>Actions</th></tr>
+      ${db.users.map(u=>`<tr>
+        <td style="color:var(--muted);font-size:12px">${u.id}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:28px;height:28px;font-size:11px">${u.name.split(' ').map(w=>w[0]).join('')}</div><strong>${u.name}</strong></div></td>
+        <td style="color:var(--blue)">${u.email}</td>
+        <td>${statusBadge(u.role)}</td>
+        <td style="color:var(--muted)">${u.lastLogin}</td>
+        <td>${statusBadge(u.status)}</td>
+        <td><span class="tag">${u.role==='Admin'?'Full Access':u.role==='Manager'?'Read/Write':'Read Only'}</span></td>
+        <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Reset PW</button></td>
+      </tr>`).join('')}
+    </table></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Role Permissions Matrix</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Feature</th><th>Admin</th><th>Manager</th><th>Employee</th></tr>
+      ${[['View Dashboard','✅','✅','✅'],['Record Sales','✅','✅','✅'],['View Reports','✅','✅','❌'],['Manage Inventory','✅','✅','❌'],['Manage Customers','✅','✅','✅'],['Manage Users','✅','❌','❌'],['Financial Reports','✅','✅','❌'],['System Settings','✅','❌','❌'],['Delete Records','✅','❌','❌']].map(r=>`<tr><td>${r[0]}</td><td style="text-align:center">${r[1]}</td><td style="text-align:center">${r[2]}</td><td style="text-align:center">${r[3]}</td></tr>`).join('')}
+    </table></div></div>`;
+}
+function openAddUserModal() {
+  openModal('Register New User', `
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name</label><input type="text" style="width:100%" placeholder="Full Name"></div>
+      <div class="form-group"><label>Email</label><input type="email" style="width:100%" placeholder="user@email.com"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Password</label><input type="password" style="width:100%" placeholder="Temporary password"></div>
+      <div class="form-group"><label>Role</label>
+        <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text)">
+          <option>Employee</option><option>Manager</option><option>Admin</option>
+        </select></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="alert('User created! ✓');closeModal()">Create User</button>
+    </div>`);
+}
+
+// ─── FINANCE ─────────────────────────────────────────────────────────
+function renderFinance() {
+  const revenue = db.sales.filter(s=>s.status==='Completed').reduce((a,b)=>a+b.amount,0);
+  const expenses = db.expenses.reduce((a,b)=>a+b.amount,0);
+  const profit = revenue - expenses;
+  document.getElementById('content-area').innerHTML = `
+    <div class="stat-grid" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="color:var(--accent)">${UGX(revenue)}</div><div class="stat-change stat-up">↑ 18% vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-value" style="color:var(--red)">${UGX(expenses)}</div><div class="stat-change stat-down">↑ 5% vs last month</div></div>
+      <div class="stat-card"><div class="stat-label">Net Profit</div><div class="stat-value" style="color:var(--green)">${UGX(profit)}</div><div class="stat-change stat-up">Margin: ${Math.round((profit/revenue)*100)}%</div></div>
+      <div class="stat-card"><div class="stat-label">Cash on Hand</div><div class="stat-value">${UGX(842000)}</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Expense Tracker</div><button class="btn btn-primary btn-sm" onclick="openModal('Add Expense','<p>Expense form.</p>')">+ Add</button></div>
+        <div class="table-wrap"><table>
+          <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr>
+          ${db.expenses.map(e=>`<tr>
+            <td style="color:var(--muted)">${e.date}</td>
+            <td><span class="tag">${e.category}</span></td>
+            <td>${e.desc}</td>
+            <td style="color:var(--red);font-weight:600">- ${UGX(e.amount)}</td>
+          </tr>`).join('')}
+          <tr><td colspan="3" style="text-align:right;font-weight:700;border-top:1px solid var(--border);padding-top:10px">TOTAL EXPENSES</td><td style="color:var(--red);font-weight:700;border-top:1px solid var(--border);padding-top:10px">- ${UGX(expenses)}</td></tr>
+        </table></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Profit & Loss Summary</div></div>
+          <table style="width:100%;font-size:13px">
+            <tr><td style="padding:8px 0;color:var(--muted)">Gross Revenue</td><td style="text-align:right;font-weight:600;color:var(--green)">+ ${UGX(revenue)}</td></tr>
+            ${db.expenses.map(e=>`<tr><td style="padding:5px 0;color:var(--muted);font-size:12px">↳ ${e.category}</td><td style="text-align:right;color:var(--red);font-size:12px">- ${UGX(e.amount)}</td></tr>`).join('')}
+            <div class="divider"></div>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:12px 0;font-weight:700">NET PROFIT</td><td style="text-align:right;font-size:18px;font-weight:700;color:var(--green)">+ ${UGX(profit)}</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Expense Breakdown</div></div>
+          <div style="position:relative;height:180px"><canvas id="chartExp"></canvas></div>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{
+    new Chart(document.getElementById('chartExp'),{
+      type:'doughnut',
+      data:{labels:db.expenses.map(e=>e.category),datasets:[{data:db.expenses.map(e=>e.amount),backgroundColor:['#F59E0B','#58A6FF','#3FB950','#D2A8FF','#F85149'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8B949E',font:{size:11},boxWidth:10}}}}
+    });
+  },100);
+}
+
+// ─── REPORTS ─────────────────────────────────────────────────────────
+function renderReports() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <div class="section-actions">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)"><option>Daily</option><option selected>Monthly</option><option>Yearly</option></select>
+        <input type="month" value="2026-03" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)">
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-primary btn-sm">📄 Export PDF</button>
+        <button class="btn btn-ghost btn-sm">📊 Export Excel</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Monthly Sales Report — March 2026</div></div>
+      <div class="chart-wrap"><canvas id="chartRep"></canvas></div>
+    </div>
+    <div class="three-col">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Sales by Payment Method</div>
+        ${[['Cash','38%','var(--green)'],['Mobile Money','45%','var(--blue)'],['Bank Transfer','17%','var(--purple)']].map(([l,p,c])=>`
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${l}</span><span style="color:${c};font-weight:600">${p}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${p};background:${c}"></div></div>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Top Selling Products</div>
+        ${[['Tropical Juice','UGX 384,000','1'],['Yogurt 250g','UGX 220,000','2'],['Cassava Crisps','UGX 175,000','3'],['Bread Loaf','UGX 143,000','4']].map(([n,v,r])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:14px;width:20px;color:var(--muted)">${r}</span>
+            <div style="flex:1;font-size:13px">${n}</div>
+            <span style="color:var(--accent);font-size:12px;font-weight:600">${v}</span>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Inventory Report</div>
+        ${[['Total Products','8'],['In Stock','5'],['Low Stock','2'],['Out of Stock','1'],['Total Value','UGX 2.4M']].map(([l,v])=>`
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <span style="color:var(--muted)">${l}</span><span style="font-weight:600">${v}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  setTimeout(()=>{
+    new Chart(document.getElementById('chartRep'),{
+      type:'line',data:{labels:weeklyLabels,datasets:[
+        {label:'Revenue',data:weeklySales,borderColor:'#F59E0B',backgroundColor:'#F59E0B22',tension:.4,fill:true},
+        {label:'Expenses',data:[180000,120000,95000,210000,145000,88000,312000],borderColor:'#F85149',backgroundColor:'#F8514922',tension:.4,fill:true}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8B949E',boxWidth:12,font:{size:12}}}},scales:{x:{ticks:{color:'#8B949E'},grid:{color:'#30363D44'}},y:{ticks:{color:'#8B949E',callback:v=>(v/1000)+'K'},grid:{color:'#30363D44'}}}}
+    });
+  },100);
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────
+function renderNotifications() {
+  const notifs = [
+    {icon:'🔴',type:'danger',title:'Out of Stock: Mineral Water 1L',time:'2 minutes ago',read:false},
+    {icon:'🟡',type:'warn',title:'Low Stock: Chocolate Cake Slice (18 left, min: 20)',time:'15 minutes ago',read:false},
+    {icon:'🟡',type:'warn',title:'Low Stock: Cassava Crisps 100g (8 left, min: 15)',time:'1 hour ago',read:false},
+    {icon:'✅',type:'success',title:'Order ORD-003 delivered successfully',time:'3 hours ago',read:false},
+    {icon:'💰',type:'info',title:'Payment received: UGX 138,000 from Nassozi Faith',time:'Yesterday 4:30 PM',read:false},
+    {icon:'📦',type:'info',title:'New order ORD-001 placed by Nanteza Rita',time:'Yesterday 2:00 PM',read:true},
+    {icon:'🔑',type:'info',title:'New user John Staff logged in',time:'2 days ago',read:true},
+  ];
+  document.getElementById('content-area').innerHTML = `
+    <div class="card-header" style="margin-bottom:16px">
+      <span style="color:var(--muted);font-size:13px">${notifs.filter(n=>!n.read).length} unread notifications</span>
+      <button class="btn btn-ghost btn-sm">Mark All Read</button>
+    </div>
+    <div class="card">
+      ${notifs.map(n=>`
+        <div class="log-item" style="${n.read?'opacity:0.6':''}">
+          <div style="font-size:18px">${n.icon}</div>
+          <div style="flex:1">
+            <div class="log-text" style="font-weight:${n.read?'400':'600'}">${n.title}</div>
+            <div class="log-time">${n.time}</div>
+          </div>
+          ${!n.read?'<span class="badge badge-blue" style="font-size:10px">New</span>':''}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────
+function renderSettings() {
+  document.getElementById('content-area').innerHTML = `
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏢 Business Information</div>
+          <div class="form-group"><label>Business Name</label><input type="text" style="width:100%" value="Kampala Mart Ltd"></div>
+          <div class="form-group"><label>Address</label><input type="text" style="width:100%" value="Plot 45, Kampala Road, Kampala"></div>
+          <div class="form-group"><label>Phone</label><input type="text" style="width:100%" value="+256 414 000000"></div>
+          <div class="form-group"><label>Email</label><input type="text" style="width:100%" value="info@kampalamart.ug"></div>
+          <div class="form-group"><label>TIN Number</label><input type="text" style="width:100%" value="1001234567"></div>
+          <button class="btn btn-primary">Save Changes</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">💰 Financial Settings</div>
+          <div class="form-group"><label>Currency</label>
+            <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text)">
+              <option selected>UGX — Ugandan Shilling</option><option>USD — US Dollar</option><option>KES — Kenyan Shilling</option>
+            </select></div>
+          <div class="form-group"><label>VAT Rate (%)</label><input type="number" style="width:100%" value="18"></div>
+          <div class="form-group"><label>Fiscal Year Start</label>
+            <select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text)">
+              <option>January</option><option selected>July</option><option>April</option>
+            </select></div>
+          <button class="btn btn-primary">Save</button>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🔒 Security Settings</div>
+          ${[['Data Encryption','AES-256 encryption active','✅ Active'],['Automatic Backup','Daily backup at 11:00 PM','✅ Enabled'],['Activity Logging','All user actions logged','✅ Active'],['Session Timeout','Auto-logout after 30 mins','⚙️ 30 min'],['Two-Factor Auth','SMS verification enabled','✅ Enabled']].map(([t,d,s])=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-size:13px;font-weight:600">${t}</div><div style="font-size:11px;color:var(--muted)">${d}</div></div>
+              <span class="badge badge-green">${s}</span>
+            </div>`).join('')}
+          <div style="margin-top:16px;display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm">🗄️ Backup Now</button>
+            <button class="btn btn-ghost btn-sm">📋 View Logs</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🎨 Appearance</div>
+          <div class="form-group"><label>Receipt Footer Message</label>
+            <textarea style="width:100%;height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);resize:vertical">Thank you for shopping with us! 🙏</textarea></div>
+          <div class="form-group"><label>Low Stock Alert Threshold (%)</label><input type="number" style="width:100%" value="20" min="5" max="50"></div>
+          <button class="btn btn-primary">Save Preferences</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">📋 Activity Log</div>
+          ${[['Admin User logged in','Today 09:15 AM','var(--green)'],['New sale TXN-001 recorded','Today 09:32 AM','var(--accent)'],['Inventory updated: Juice +50 units','Today 10:00 AM','var(--blue)'],['User John Staff password reset','Yesterday 3:00 PM','var(--orange)'],['Backup completed successfully','Yesterday 11:00 PM','var(--green)']].map(([t,d,c])=>`
+            <div class="log-item">
+              <div class="log-dot" style="background:${c}"></div>
+              <div><div class="log-text">${t}</div><div class="log-time">${d}</div></div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
