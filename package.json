@@ -1,0 +1,17 @@
+{
+  "name": "bms-enterprise",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "api:dev": "cd apps/api && php artisan serve",
+    "web:dev": "cd apps/web && npm run dev",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

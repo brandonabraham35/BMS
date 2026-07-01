@@ -1,0 +1,60 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: bms-api
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./apps/api:/var/www/html
+    networks:
+      - bms-network
+    depends_on:
+      - postgres
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    container_name: bms-web
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    networks:
+      - bms-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-bms}
+      POSTGRES_USER: ${DB_USERNAME:-bms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bms-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: bms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - bms-network
+
+networks:
+  bms-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
