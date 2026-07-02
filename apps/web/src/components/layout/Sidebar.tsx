@@ -4,6 +4,8 @@ import { NavLink } from 'react-router-dom';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Profile', href: '/profile', icon: Users },
+  { name: 'Security Center', href: '/security', icon: ShieldCheck },
   { name: 'Companies', href: '/companies', icon: Building2 },
   { name: 'Branches', href: '/branches', icon: Building2 },
   { name: 'Users', href: '/users', icon: Users },

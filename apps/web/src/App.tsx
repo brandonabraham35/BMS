@@ -4,6 +4,10 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { LoginPage } from './pages/auth/LoginPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { SecurityCenterPage } from './pages/security/SecurityCenterPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
@@ -38,9 +42,14 @@ function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/security" element={<SecurityCenterPage />} />
                   <Route path="/companies" element={<Placeholder title="Companies" />} />
                   <Route path="/branches" element={<Placeholder title="Branches" />} />
                   <Route path="/users" element={<Placeholder title="Users" />} />
