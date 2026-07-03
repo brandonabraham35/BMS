@@ -12,16 +12,16 @@ class OrganizationPolicyPolicy
 
     public function view(User $user, OrganizationPolicy $policy): bool
     {
-        return $user->company_id === $policy->company_id;
+        return $user->workspace_id === $policy->workspace_id;
     }
 
     public function update(User $user, OrganizationPolicy $policy): bool
     {
-        return $user->company_id === $policy->company_id;
+        return $user->workspace_id === $policy->workspace_id;
     }
 
     public function delete(User $user, OrganizationPolicy $policy): bool
     {
-        return $user->company_id === $policy->company_id;
+        return $user->workspace_id === $policy->workspace_id;
     }
 }

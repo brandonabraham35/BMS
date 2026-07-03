@@ -28,9 +28,12 @@ class OrganizationPolicyController extends Controller
             'type' => 'required|string|max:100',
             'rules' => 'required|array',
             'is_active' => 'boolean',
+            'company_id' => 'nullable|exists:companies,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
-        $data['company_id'] = $request->user()->company_id;
+        $user = $request->user();
+        $data['workspace_id'] = $user->workspace_id;
 
         $policy = $this->policyService->create($data);
         return $this->successResponse(new BaseResource($policy), 'Policy created successfully', 201);

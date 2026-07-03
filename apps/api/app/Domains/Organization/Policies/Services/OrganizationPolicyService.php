@@ -17,7 +17,7 @@ class OrganizationPolicyService
     public function list(Request $request): LengthAwarePaginator
     {
         return OrganizationPolicy::search($request, ['name', 'type'])
-            ->where('company_id', $request->user()->company_id)
+            ->where('workspace_id', $request->user()->workspace_id)
             ->paginate($request->input('per_page', 15));
     }
 
