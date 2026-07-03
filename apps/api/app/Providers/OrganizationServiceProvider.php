@@ -22,12 +22,19 @@ class OrganizationServiceProvider extends ServiceProvider
             return new TenantResolver($app->make(TenantContext::class));
         });
 
+        // Settings
         $this->app->bind(
             \App\Domains\Organization\Settings\Contracts\SettingsRepositoryInterface::class,
             \App\Domains\Organization\Settings\Repositories\DatabaseSettingsRepository::class
         );
-
         $this->app->singleton(\App\Domains\Organization\Settings\Services\SettingsResolver::class);
+
+        // Policies
+        $this->app->bind(
+            \App\Domains\Organization\Policies\Contracts\PolicyRepositoryInterface::class,
+            \App\Domains\Organization\Policies\Repositories\DatabasePolicyRepository::class
+        );
+        $this->app->singleton(\App\Domains\Organization\Policies\Services\PolicyResolver::class);
     }
 
     public function boot(): void
