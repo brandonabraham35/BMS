@@ -11,10 +11,12 @@ class DatabasePolicyRepository implements PolicyRepositoryInterface
     {
         $query = OrganizationPolicy::where('type', $type);
 
-        if (isset($context['company_id'])) {
-            $query->where('company_id', $context['company_id']);
-        } else {
-            $query->whereNull('company_id');
+        foreach (['workspace_id', 'company_id', 'branch_id'] as $field) {
+            if (isset($context[$field])) {
+                $query->where($field, $context[$field]);
+            } else {
+                $query->whereNull($field);
+            }
         }
 
         return $query->where('is_active', true)->first();
@@ -22,8 +24,13 @@ class DatabasePolicyRepository implements PolicyRepositoryInterface
 
     public function updateOrCreate(string $type, string $name, array $rules, bool $isActive, array $context): OrganizationPolicy
     {
+        $attributes = ['type' => $type];
+        foreach (['workspace_id', 'company_id', 'branch_id'] as $field) {
+            $attributes[$field] = $context[$field] ?? null;
+        }
+
         return OrganizationPolicy::updateOrCreate(
-            ['type' => $type, 'company_id' => $context['company_id'] ?? null],
+            $attributes,
             ['name' => $name, 'rules' => $rules, 'is_active' => $isActive]
         );
     }

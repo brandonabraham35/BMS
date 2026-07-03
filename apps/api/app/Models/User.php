@@ -46,13 +46,6 @@ class User extends Authenticatable
         return $this->belongsTo(Workspace::class);
     }
 
-    public function workspaces(): BelongsToMany
-    {
-        return $this->belongsToMany(Workspace::class, 'workspace_users')
-            ->withPivot('role')
-            ->withTimestamps();
-    }
-
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -68,10 +61,18 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
+    public function directPermissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions')
+            ->withPivot('metadata', 'expires_at')
+            ->withTimestamps();
+    }
+
     public function hasPermission(string $permission): bool
     {
-        return $this->roles()->whereHas('permissions', function ($query) use ($permission) {
-            $query->where('slug', $permission);
-        })->exists();
+        $resolver = app(\App\Domains\AccessControl\Services\PermissionResolver::class);
+        $permissions = $resolver->resolve($this);
+
+        return $permissions->contains($permission);
     }
 }

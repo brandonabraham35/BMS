@@ -14,7 +14,9 @@ class OrganizationPolicy extends Model
     use HasFactory, HasUuid, SoftDeletes, Searchable;
 
     protected $fillable = [
+        'workspace_id',
         'company_id',
+        'branch_id',
         'name',
         'type',
         'rules',
@@ -26,8 +28,18 @@ class OrganizationPolicy extends Model
         'is_active' => 'boolean',
     ];
 
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

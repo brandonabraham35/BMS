@@ -24,6 +24,20 @@ Route::prefix('v1')->group(function () {
         Route::get('/sessions', [\App\Domains\Identity\Sessions\Controllers\SessionsController::class, 'index']);
         Route::delete('/sessions/other', [\App\Domains\Identity\Sessions\Controllers\SessionsController::class, 'destroyAll']);
 
+        // Access Control Core
+        Route::apiResource('roles', \App\Domains\AccessControl\Controllers\RoleController::class);
+        Route::post('roles/{role}/clone', [\App\Domains\AccessControl\Controllers\RoleController::class, 'clone']);
+
+        Route::get('permissions', [\App\Domains\AccessControl\Controllers\PermissionController::class, 'index']);
+        Route::get('permission-categories', [\App\Domains\AccessControl\Controllers\PermissionController::class, 'categories']);
+        Route::get('permission-groups', [\App\Domains\AccessControl\Controllers\PermissionController::class, 'groups']);
+
+        Route::get('users/{user}/permissions', [\App\Domains\AccessControl\Controllers\UserPermissionController::class, 'show']);
+        Route::post('users/{user}/roles/sync', [\App\Domains\AccessControl\Controllers\UserPermissionController::class, 'syncRoles']);
+        Route::post('users/{user}/permissions/sync', [\App\Domains\AccessControl\Controllers\UserPermissionController::class, 'syncPermissions']);
+
+        Route::post('authorization/simulate', [\App\Domains\AccessControl\Controllers\AuthorizationSimulatorController::class, 'simulate']);
+
         // Organization Core
         Route::apiResource('workspaces', \App\Domains\Organization\Controllers\WorkspaceController::class);
 
