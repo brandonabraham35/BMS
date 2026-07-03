@@ -27,12 +27,12 @@ class AuthenticationController extends Controller
             $request->device_name
         );
 
-        return $this->success($result, 'Login successful');
+        return $this->successResponse($result, 'Login successful');
     }
 
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
-        return $this->success(null, 'Logged out successfully');
+        return $this->successResponse(null, 'Logged out successfully');
     }
 }

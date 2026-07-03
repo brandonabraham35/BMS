@@ -2,36 +2,37 @@
 
 namespace App\Services;
 
+use App\Domains\Organization\Settings\Contracts\SettingsRepositoryInterface;
+use App\Domains\Organization\Settings\Services\SettingsResolver;
 use App\Models\Setting;
 
 class SettingsService
 {
-    public function get(string $key, $default = null, ?string $companyId = null, ?string $branchId = null)
-    {
-        $setting = Setting::where('key', $key)
-            ->where('company_id', $companyId)
-            ->where('branch_id', $branchId)
-            ->first();
+    public function __construct(
+        protected SettingsRepositoryInterface $repository,
+        protected SettingsResolver $resolver,
+        protected AuditLogger $auditLogger
+    ) {}
 
-        return $setting ? $this->castValue($setting->value, $setting->type) : $default;
+    public function get(string $key, $default = null): mixed
+    {
+        return $this->resolver->resolve($key, $default);
     }
 
-    public function set(string $key, $value, string $type = 'string', ?string $companyId = null, ?string $branchId = null): Setting
+    public function set(string $key, $value, array $context = [], string $type = 'string', string $group = 'general'): Setting
     {
-        return Setting::updateOrCreate(
-            ['key' => $key, 'company_id' => $companyId, 'branch_id' => $branchId],
-            ['value' => (string) $value, 'type' => $type]
+        $oldSetting = $this->repository->find($key, $context);
+        $oldValues = $oldSetting ? $oldSetting->toArray() : null;
+
+        $setting = $this->repository->updateOrCreate($key, $value, $type, $group, $context);
+
+        $this->auditLogger->log(
+            'setting.updated',
+            $setting,
+            $oldValues,
+            $setting->toArray()
         );
-    }
 
-    protected function castValue($value, string $type)
-    {
-        return match ($type) {
-            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            'integer' => (int) $value,
-            'float' => (float) $value,
-            'json' => json_decode($value, true),
-            default => $value,
-        };
+        return $setting;
     }
 }

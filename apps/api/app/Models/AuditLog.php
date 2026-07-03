@@ -12,6 +12,7 @@ class AuditLog extends Model
     use HasFactory, HasUuid;
 
     protected $fillable = [
+        'workspace_id',
         'company_id',
         'user_id',
         'action',
@@ -27,6 +28,11 @@ class AuditLog extends Model
         'old_values' => 'array',
         'new_values' => 'array',
     ];
+
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
 
     public function company(): BelongsTo
     {

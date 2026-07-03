@@ -3,11 +3,10 @@
 namespace App\Traits;
 
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 trait ApiResponse
 {
-    protected function success($data, ?string $message = null, int $code = Response::HTTP_OK): JsonResponse
+    protected function successResponse($data, ?string $message = null, int $code = 200): JsonResponse
     {
         return response()->json([
             'status' => 'Success',
@@ -16,12 +15,28 @@ trait ApiResponse
         ], $code);
     }
 
-    protected function error(?string $message, int $code, $errors = null): JsonResponse
+    protected function errorResponse(string $message, int $code, $errors = null): JsonResponse
     {
         return response()->json([
             'status' => 'Error',
             'message' => $message,
             'errors' => $errors,
         ], $code);
+    }
+
+    /**
+     * @deprecated Use successResponse
+     */
+    protected function success($data, ?string $message = null, int $code = 200): JsonResponse
+    {
+        return $this->successResponse($data, $message, $code);
+    }
+
+    /**
+     * @deprecated Use errorResponse
+     */
+    protected function error(string $message, int $code, $errors = null): JsonResponse
+    {
+        return $this->errorResponse($message, $code, $errors);
     }
 }

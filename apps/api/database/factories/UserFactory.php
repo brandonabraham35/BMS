@@ -3,12 +3,14 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Models\Workspace;
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<User>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
@@ -25,11 +27,17 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'id' => (string) Str::uuid(),
+            'workspace_id' => Workspace::factory(),
+            'company_id' => function (array $attributes) {
+                return Company::factory()->create(['workspace_id' => $attributes['workspace_id']])->id;
+            },
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'status' => 'active',
         ];
     }
 

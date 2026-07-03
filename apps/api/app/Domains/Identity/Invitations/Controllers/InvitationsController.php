@@ -23,7 +23,7 @@ class InvitationsController extends Controller
 
         $invitation = $this->invitationService->invite($request->only('email', 'role_slug'), $request->user());
 
-        return $this->success($invitation, 'Invitation sent successfully', 201);
+        return $this->successResponse($invitation, 'Invitation sent successfully', 201);
     }
 
     public function accept(Request $request): JsonResponse
@@ -36,9 +36,9 @@ class InvitationsController extends Controller
 
         try {
             $user = $this->invitationService->accept($request->token, $request->only('name', 'password'));
-            return $this->success($user, 'Invitation accepted successfully');
+            return $this->successResponse($user, 'Invitation accepted successfully');
         } catch (\Exception $e) {
-            return $this->error($e->getMessage(), 422);
+            return $this->errorResponse($e->getMessage(), 422);
         }
     }
 }

@@ -13,12 +13,21 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
-        $middleware->append(TenantMiddleware::class);
+        $middleware->api(append: [
+            \App\Http\Middleware\RequestIdMiddleware::class,
+        ]);
+
+        $middleware->alias([
+            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'workspace' => \App\Http\Middleware\WorkspaceMiddleware::class,
+            'company' => \App\Http\Middleware\CompanyMiddleware::class,
+            'branch' => \App\Http\Middleware\BranchMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
