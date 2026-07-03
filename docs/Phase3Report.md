@@ -5,8 +5,8 @@
 BMS Enterprise has been upgraded to a robust, multi-level hierarchical architecture designed for enterprise groups, franchises, and multi-country organizations.
 
 ### Hierarchy
-1. **Platform**: Global configuration.
-2. **Workspace**: Representing an organization or business group.
+1. **Platform**: Global configuration and base policies.
+2. **Workspace**: Top-level organization or business group.
 3. **Company**: Legal entities under a workspace (supports parent-child hierarchy).
 4. **Branch**: Physical or logical locations under a company.
 5. **Department**: Functional units within a branch (supports hierarchy).
@@ -15,46 +15,48 @@ BMS Enterprise has been upgraded to a robust, multi-level hierarchical architect
 ### Core Components
 - **TenantContext**: A request-lifecycle singleton that stores the resolved Workspace, Company, Branch, and User.
 - **TenantResolver**: Automatically resolves the context from the authenticated user or request headers.
-- **Context-Aware Settings Engine**: A unified system for managing hierarchical configuration with inheritance (Platform -> Workspace -> Company -> Branch).
+- **Hierarchical Settings Engine**: A unified system for managing configuration with inheritance (Platform -> Workspace -> Company -> Branch).
+- **Organization Policies Foundation**: A framework for resolving and validating business rules (Working Days, Security, etc.) across the organization tree.
 - **Hardened Middleware**: Stacked middlewares (`tenant`, `workspace`, `company`, `branch`) ensuring strict data isolation at the routing level.
 
 ## 2. Features Implemented
 
 - **Workspace Management**: Complete CRUD with audit logging and isolation.
-- **Company Hierarchy**: Parent-child relationship support with circular reference prevention.
-- **Organizational Entities**: Full support for Branches, Departments, and Teams.
-- **Hierarchical Settings**: Centralized preferences (Currency, Timezone, Branding) with inheritance and overrides.
-- **Audit System**: Integrated logging for all organizational changes including hierarchy shifts and setting updates.
+- **Company Hierarchy**: Parent-child relationship support with circular reference prevention managed by `CompanyHierarchyService`.
+- **Organizational Entities**: Full support for Branches, Departments, and Teams with multi-tenant scoping.
+- **Context-Aware Settings**: Centralized preferences (Currency, Timezone, Branding) with inheritance and context-specific overrides.
+- **Organization Policies**: Resolvable policy framework supporting hierarchical overrides (Platform -> Workspace -> Company).
+- **Audit System**: Integrated logging for all organizational changes including hierarchy shifts, setting updates, and policy modifications.
 - **Searchable Engine**: Unified trait for search, filtering, and pagination across all organizational models.
 
 ## 3. Security Review
 
-- **Isolation**: Verified that cross-workspace data leakage is impossible via middleware and global scoping patterns.
-- **Authorization**: Integrated Laravel Policies to prevent horizontal privilege escalation within the same workspace.
-- **Boundary Verification**: Pass 100% of the `SecurityCertificationTest` suite.
-- **Context Integrity**: Ensured that the `TenantContext` remains consistent from the middleware down to the database layer.
+- **Tenant Isolation**: Verified that cross-workspace and cross-company data leakage is impossible via middleware and policy-driven authorization.
+- **Authorization**: Integrated Laravel Policies for all organizational entities to prevent unauthorized access.
+- **Boundary Verification**: Passed 100% of the `SecurityCertificationTest` suite, covering direct access and list scoping.
+- **Context Integrity**: The `TenantContext` is enforced from middleware down to the service and repository layers.
 
 ## 4. Performance Review
 
-- **Indexing**: All tenant-scoping columns (`workspace_id`, `company_id`, `branch_id`, etc.) are indexed.
-- **Query Efficiency**: Minimized N+1 queries using eager loading in controllers.
-- **Middleware Overhead**: The resolution pipeline is lightweight, primarily relying on the authenticated user object.
-- **Settings Cache**: Architecture is prepared for Redis/distributed caching via `SettingsCacheInterface`.
+- **Indexing**: All tenant-scoping columns (`workspace_id`, `company_id`, `branch_id`, etc.) are indexed for fast lookup.
+- **Query Efficiency**: Minimized N+1 queries using eager loading and relationship-based scoping.
+- **Middleware Overhead**: Lightweight resolution pipeline optimized for request lifecycle.
+- **Extensibility**: Prepared for Redis-based caching of settings and policies via defined interfaces.
 
 ## 5. Technical Debt
 
-- **Encrypted Settings**: Interface exists, but implementation for sensitive settings (e.g., API keys) is deferred to Phase 4.
-- **Custom Domains**: Architectural hooks are in place, but domain-to-workspace resolution is not yet implemented.
+- **Encrypted Settings**: Foundational support exists, but full encryption for sensitive API keys is deferred to Phase 4.
+- **Custom Domains**: Domain-to-Workspace resolution logic is prepared but not yet active in the resolver.
 
 ## 6. Known Risks
 
-- **Deep Hierarchy Performance**: Very deep company or department trees may require optimized CTE queries in the future if they exceed 10+ levels.
+- **Hierarchy Depth**: Deeply nested structures (10+ levels) may require recursive CTE optimization in future iterations.
 
 ## 7. Recommendations for Phase 4
 
-- Implement **Access Control (RBAC)** hardening using the new organizational context.
-- Implement **Shared Services** (Shared Inventory/Warehouses) using the foundational interfaces defined in Phase 3.
-- Expand **Multi-Country Support** with dynamic tax zone resolution based on Company location settings.
+- Implement **Access Control (RBAC)** hardening leveraging the new hierarchical context.
+- Implement **Shared Services** (Inventory, Warehouses) using the foundational interfaces.
+- Enhance **Multi-Country Logic** with dynamic tax and regional rule resolution via the Policy Engine.
 
 ---
-**Status: PHASE 3 COMPLETE**
+**Status: PHASE 3 CERTIFIED COMPLETE**
