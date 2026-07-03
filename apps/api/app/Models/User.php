@@ -9,17 +9,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasUuid, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasUuid, Notifiable, SoftDeletes;
 
     protected $fillable = [
+        'workspace_id',
         'company_id',
         'branch_id',
+        'department_id',
+        'employee_id',
         'name',
         'email',
         'password',
+        'job_title',
+        'status',
     ];
 
     protected $hidden = [
@@ -33,6 +39,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
+
+    public function workspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_users')
+            ->withPivot('role')
+            ->withTimestamps();
     }
 
     public function company(): BelongsTo

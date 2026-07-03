@@ -3,8 +3,9 @@
 namespace Tests\Unit;
 
 use App\Models\Company;
+use App\Models\Workspace;
 use App\Services\AuditLogger;
-use App\Services\CompanyContext;
+use App\Domains\Organization\Tenant\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Tests\TestCase;
@@ -15,8 +16,11 @@ class AuditLoggerTest extends TestCase
 
     public function test_audit_log_creation(): void
     {
-        $company = Company::create(['name' => 'Test Co', 'slug' => 'test-co']);
-        $context = new CompanyContext;
+        $workspace = Workspace::factory()->create();
+        $company = Company::factory()->create(['workspace_id' => $workspace->id]);
+
+        $context = new TenantContext;
+        $context->setWorkspace($workspace);
         $context->setCompany($company);
 
         $request = Request::create('/test', 'GET');
@@ -25,6 +29,7 @@ class AuditLoggerTest extends TestCase
         $logger->log('created', $company, null, $company->toArray());
 
         $this->assertDatabaseHas('audit_logs', [
+            'workspace_id' => $workspace->id,
             'company_id' => $company->id,
             'action' => 'created',
             'entity_type' => Company::class,

@@ -17,18 +17,24 @@ class SessionsController extends Controller
     public function index(Request $request): JsonResponse
     {
         $sessions = $this->sessionService->getActiveSessions($request->user());
-        return $this->success($sessions, 'Active sessions retrieved');
+        return $this->successResponse($sessions, 'Active sessions retrieved');
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
         $this->sessionService->terminateSession($request->user(), $id);
-        return $this->success(null, 'Session terminated');
+        return $this->successResponse(null, 'Session terminated');
     }
 
     public function destroyAll(Request $request): JsonResponse
     {
-        $this->sessionService->terminateAllOtherSessions($request->user(), $request->user()->currentAccessToken()->id);
-        return $this->success(null, 'All other sessions terminated');
+        $user = $request->user();
+        $token = $user->currentAccessToken();
+
+        // In tests using actingAs, currentAccessToken might be null or handled differently
+        $tokenId = $token ? (string) $token->id : '';
+
+        $this->sessionService->terminateAllOtherSessions($user, $tokenId);
+        return $this->successResponse(null, 'All other sessions terminated');
     }
 }
