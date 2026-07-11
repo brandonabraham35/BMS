@@ -7,6 +7,7 @@ use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
+use App\Domains\Organization\Events\WorkspaceUpdated;
 
 class WorkspaceService
 {
@@ -14,8 +15,13 @@ class WorkspaceService
 
     public function list(Request $request): LengthAwarePaginator
     {
-        return Workspace::search($request, ['name', 'slug'])
-            ->paginate($request->input('per_page', 15));
+        $query = Workspace::search($request, ['name', 'slug']);
+
+        if ($request->boolean('with_archived')) {
+            $query->withTrashed();
+        }
+
+        return $query->paginate($request->input('per_page', 15));
     }
 
     public function create(array $data): Workspace
@@ -27,10 +33,10 @@ class WorkspaceService
         $workspace = Workspace::create($data);
 
         $this->auditLogger->log(
-            action: 'workspace.created',
-            entityType: Workspace::class,
-            entityId: $workspace->id,
-            newValues: $workspace->toArray()
+            'workspace.created',
+            $workspace,
+            null,
+            $workspace->toArray()
         );
 
         return $workspace;
@@ -42,12 +48,13 @@ class WorkspaceService
         $workspace->update($data);
 
         $this->auditLogger->log(
-            action: 'workspace.updated',
-            entityType: Workspace::class,
-            entityId: $workspace->id,
-            oldValues: $oldValues,
-            newValues: $workspace->toArray()
+            'workspace.updated',
+            $workspace,
+            $oldValues,
+            $workspace->toArray()
         );
+
+        event(new WorkspaceUpdated($workspace->id));
 
         return $workspace;
     }
@@ -57,9 +64,37 @@ class WorkspaceService
         $workspace->delete();
 
         $this->auditLogger->log(
-            action: 'workspace.archived',
-            entityType: Workspace::class,
-            entityId: $workspace->id
+            'workspace.archived',
+            $workspace
         );
+
+        event(new WorkspaceUpdated($workspace->id));
+    }
+
+    public function restore(string $id): Workspace
+    {
+        $workspace = Workspace::withTrashed()->findOrFail($id);
+        $workspace->restore();
+
+        $this->auditLogger->log(
+            'workspace.restored',
+            $workspace
+        );
+
+        event(new WorkspaceUpdated($workspace->id));
+
+        return $workspace;
+    }
+
+    public function forceDelete(string $id): void
+    {
+        $workspace = Workspace::withTrashed()->findOrFail($id);
+
+        $this->auditLogger->log(
+            'workspace.permanently_deleted',
+            $workspace
+        );
+
+        $workspace->forceDelete();
     }
 }

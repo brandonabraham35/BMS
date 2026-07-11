@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users },
   { name: 'Roles & Permissions', href: '/rbac', icon: ShieldCheck },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Policies', href: '/policies', icon: ShieldCheck },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Audit Logs', href: '/audit-logs', icon: Activity },
 ];

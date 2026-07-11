@@ -22,6 +22,31 @@ class OrganizationServiceProvider extends ServiceProvider
             return new TenantResolver($app->make(TenantContext::class));
         });
 
+        // Caching
+        $this->app->singleton(
+            \App\Domains\Organization\Caching\Contracts\CacheKeyGeneratorInterface::class,
+            \App\Domains\Organization\Caching\Services\DefaultCacheKeyGenerator::class
+        );
+
+        $this->app->singleton(
+            \App\Domains\Organization\Caching\Contracts\CacheInvalidatorInterface::class,
+            \App\Domains\Organization\Caching\Services\OrganizationCacheInvalidator::class
+        );
+
+        $this->app->singleton(\App\Domains\Organization\Caching\Contracts\SettingsCacheInterface::class, function ($app) {
+            return new \App\Domains\Organization\Caching\Services\SettingsCache(
+                $app->make(\Illuminate\Contracts\Cache\Repository::class),
+                $app->make(\App\Domains\Organization\Caching\Contracts\CacheKeyGeneratorInterface::class)
+            );
+        });
+
+        $this->app->singleton(\App\Domains\Organization\Caching\Contracts\PolicyCacheInterface::class, function ($app) {
+            return new \App\Domains\Organization\Caching\Services\PolicyCache(
+                $app->make(\Illuminate\Contracts\Cache\Repository::class),
+                $app->make(\App\Domains\Organization\Caching\Contracts\CacheKeyGeneratorInterface::class)
+            );
+        });
+
         // Settings
         $this->app->bind(
             \App\Domains\Organization\Settings\Contracts\SettingsRepositoryInterface::class,
@@ -39,6 +64,6 @@ class OrganizationServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Event::subscribe(\App\Domains\Organization\Listeners\OrganizationCacheListener::class);
     }
 }

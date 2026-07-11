@@ -15,11 +15,15 @@ class TeamService
     {
         $query = Team::search($request, ['name']);
 
-        // Ensure user can only list teams in their branch/department boundaries
+        // Ensure user can only list teams in their branch boundaries
         $query->where('branch_id', $request->user()->branch_id);
 
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->input('department_id'));
+        }
+
+        if ($request->boolean('with_archived')) {
+            $query->withTrashed();
         }
 
         return $query->paginate($request->input('per_page', 15));
@@ -62,5 +66,30 @@ class TeamService
             'team.deleted',
             $team
         );
+    }
+
+    public function restore(string $id): Team
+    {
+        $team = Team::withTrashed()->findOrFail($id);
+        $team->restore();
+
+        $this->auditLogger->log(
+            'team.restored',
+            $team
+        );
+
+        return $team;
+    }
+
+    public function forceDelete(string $id): void
+    {
+        $team = Team::withTrashed()->findOrFail($id);
+
+        $this->auditLogger->log(
+            'team.permanently_deleted',
+            $team
+        );
+
+        $team->forceDelete();
     }
 }
