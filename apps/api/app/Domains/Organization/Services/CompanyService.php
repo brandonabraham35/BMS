@@ -34,6 +34,8 @@ class CompanyService
             $company->toArray()
         );
 
+        event(new \App\Domains\Organization\Events\CompanyUpdated($company->id));
+
         return $company;
     }
 
@@ -60,5 +62,34 @@ class CompanyService
             'company.deleted',
             $company
         );
+
+        event(new \App\Domains\Organization\Events\CompanyUpdated($company->id));
+    }
+
+    public function restore(string $id): Company
+    {
+        $company = Company::withTrashed()->findOrFail($id);
+        $company->restore();
+
+        $this->auditLogger->log(
+            'company.restored',
+            $company
+        );
+
+        event(new \App\Domains\Organization\Events\CompanyUpdated($company->id));
+
+        return $company;
+    }
+
+    public function forceDelete(string $id): void
+    {
+        $company = Company::withTrashed()->findOrFail($id);
+
+        $this->auditLogger->log(
+            'company.permanently_deleted',
+            $company
+        );
+
+        $company->forceDelete();
     }
 }

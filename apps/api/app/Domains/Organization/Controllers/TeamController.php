@@ -24,10 +24,10 @@ class TeamController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'department_id' => 'required|exists:departments,id',
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'department_id' => 'required|exists:departments,id',
+            'description' => 'nullable|string|max:500',
+            'status' => 'nullable|string|in:active,inactive,archived',
         ]);
 
         $user = $request->user();
@@ -50,8 +50,8 @@ class TeamController extends Controller
         $this->authorize('update', $team);
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'description' => 'nullable|string|max:500',
+            'status' => 'nullable|string|in:active,inactive,archived',
         ]);
 
         $team = $this->teamService->update($team, $data);
@@ -63,5 +63,23 @@ class TeamController extends Controller
         $this->authorize('delete', $team);
         $this->teamService->delete($team);
         return $this->successResponse(null, 'Team deleted successfully');
+    }
+
+    public function restore(string $id): JsonResponse
+    {
+        $team = \App\Models\Team::withTrashed()->findOrFail($id);
+        $this->authorize('update', $team);
+
+        $team = $this->teamService->restore($id);
+        return $this->successResponse(new BaseResource($team), 'Team restored successfully');
+    }
+
+    public function forceDelete(string $id): JsonResponse
+    {
+        $team = \App\Models\Team::withTrashed()->findOrFail($id);
+        $this->authorize('delete', $team);
+
+        $team = $this->teamService->forceDelete($id);
+        return $this->successResponse(null, 'Team permanently deleted');
     }
 }

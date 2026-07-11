@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Domains\Organization\Events\BranchUpdated;
 
 class BranchService
 {
@@ -13,9 +14,14 @@ class BranchService
 
     public function list(Request $request): LengthAwarePaginator
     {
-        return Branch::search($request, ['name', 'code', 'email'])
-            ->where('company_id', $request->user()->company_id)
-            ->paginate($request->input('per_page', 15));
+        $query = Branch::search($request, ['name', 'code', 'email'])
+            ->where('company_id', $request->user()->company_id);
+
+        if ($request->boolean('with_archived')) {
+            $query->withTrashed();
+        }
+
+        return $query->paginate($request->input('per_page', 15));
     }
 
     public function create(array $data): Branch
@@ -44,6 +50,8 @@ class BranchService
             $branch->toArray()
         );
 
+        event(new BranchUpdated($branch->id));
+
         return $branch;
     }
 
@@ -55,5 +63,34 @@ class BranchService
             'branch.deleted',
             $branch
         );
+
+        event(new BranchUpdated($branch->id));
+    }
+
+    public function restore(string $id): Branch
+    {
+        $branch = Branch::withTrashed()->findOrFail($id);
+        $branch->restore();
+
+        $this->auditLogger->log(
+            'branch.restored',
+            $branch
+        );
+
+        event(new BranchUpdated($branch->id));
+
+        return $branch;
+    }
+
+    public function forceDelete(string $id): void
+    {
+        $branch = Branch::withTrashed()->findOrFail($id);
+
+        $this->auditLogger->log(
+            'branch.permanently_deleted',
+            $branch
+        );
+
+        $branch->forceDelete();
     }
 }

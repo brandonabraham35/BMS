@@ -57,4 +57,22 @@ class WorkspaceController extends Controller
         $this->workspaceService->delete($workspace);
         return $this->successResponse(null, 'Workspace archived successfully');
     }
+
+    public function restore(string $id): JsonResponse
+    {
+        $workspace = \App\Models\Workspace::withTrashed()->findOrFail($id);
+        $this->authorize('update', $workspace);
+
+        $workspace = $this->workspaceService->restore($id);
+        return $this->successResponse(new BaseResource($workspace), 'Workspace restored successfully');
+    }
+
+    public function forceDelete(string $id): JsonResponse
+    {
+        $workspace = \App\Models\Workspace::withTrashed()->findOrFail($id);
+        $this->authorize('delete', $workspace);
+
+        $this->workspaceService->forceDelete($id);
+        return $this->successResponse(null, 'Workspace permanently deleted');
+    }
 }

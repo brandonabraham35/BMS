@@ -54,7 +54,15 @@ class CompanyController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'legal_name' => 'nullable|string|max:255',
             'status' => 'nullable|string|in:active,inactive,archived',
+            'parent_company_id' => 'nullable|exists:companies,id',
         ]);
+
+        if (isset($data['parent_company_id']) && $data['parent_company_id'] !== $company->parent_company_id) {
+            $hierarchy = app(\App\Domains\Organization\Services\CompanyHierarchyService::class);
+            if ($hierarchy->wouldCauseCircularReference($company, $data['parent_company_id'])) {
+                return $this->errorResponse('Circular hierarchy detected', 422);
+            }
+        }
 
         $company = $this->companyService->update($company, $data);
         return $this->successResponse(new BaseResource($company), 'Company updated successfully');
@@ -65,5 +73,23 @@ class CompanyController extends Controller
         $this->authorize('delete', $company);
         $this->companyService->delete($company);
         return $this->successResponse(null, 'Company deleted successfully');
+    }
+
+    public function restore(string $id): JsonResponse
+    {
+        $company = \App\Models\Company::withTrashed()->findOrFail($id);
+        $this->authorize('update', $company);
+
+        $company = $this->companyService->restore($id);
+        return $this->successResponse(new BaseResource($company), 'Company restored successfully');
+    }
+
+    public function forceDelete(string $id): JsonResponse
+    {
+        $company = \App\Models\Company::withTrashed()->findOrFail($id);
+        $this->authorize('delete', $company);
+
+        $this->companyService->forceDelete($id);
+        return $this->successResponse(null, 'Company permanently deleted');
     }
 }

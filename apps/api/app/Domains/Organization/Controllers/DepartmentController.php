@@ -27,7 +27,7 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
             'parent_id' => 'nullable|exists:departments,id',
-            'is_active' => 'boolean',
+            'status' => 'nullable|string|in:active,inactive,archived',
         ]);
 
         $user = $request->user();
@@ -51,7 +51,7 @@ class DepartmentController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'code' => 'nullable|string|max:50',
-            'is_active' => 'boolean',
+            'status' => 'nullable|string|in:active,inactive,archived',
         ]);
 
         $department = $this->departmentService->update($department, $data);
@@ -63,5 +63,23 @@ class DepartmentController extends Controller
         $this->authorize('delete', $department);
         $this->departmentService->delete($department);
         return $this->successResponse(null, 'Department deleted successfully');
+    }
+
+    public function restore(string $id): JsonResponse
+    {
+        $department = \App\Models\Department::withTrashed()->findOrFail($id);
+        $this->authorize('update', $department);
+
+        $department = $this->departmentService->restore($id);
+        return $this->successResponse(new BaseResource($department), 'Department restored successfully');
+    }
+
+    public function forceDelete(string $id): JsonResponse
+    {
+        $department = \App\Models\Department::withTrashed()->findOrFail($id);
+        $this->authorize('delete', $department);
+
+        $this->departmentService->forceDelete($id);
+        return $this->successResponse(null, 'Department permanently deleted');
     }
 }

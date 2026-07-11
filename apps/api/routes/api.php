@@ -39,26 +39,42 @@ Route::prefix('v1')->group(function () {
         Route::post('authorization/simulate', [\App\Domains\AccessControl\Controllers\AuthorizationSimulatorController::class, 'simulate']);
 
         // Organization Core
+        Route::post('workspaces/{workspace}/restore', [\App\Domains\Organization\Controllers\WorkspaceController::class, 'restore']);
+        Route::delete('workspaces/{workspace}/force', [\App\Domains\Organization\Controllers\WorkspaceController::class, 'forceDelete']);
         Route::apiResource('workspaces', \App\Domains\Organization\Controllers\WorkspaceController::class);
 
         // Global Settings Retrieval
         Route::get('/settings', [\App\Domains\Organization\Controllers\SettingsController::class, 'index']);
 
         Route::middleware('workspace')->group(function () {
+            Route::post('companies/{company}/restore', [\App\Domains\Organization\Controllers\CompanyController::class, 'restore']);
+            Route::delete('companies/{company}/force', [\App\Domains\Organization\Controllers\CompanyController::class, 'forceDelete']);
             Route::apiResource('companies', \App\Domains\Organization\Controllers\CompanyController::class);
             Route::patch('/workspace/settings', [\App\Domains\Organization\Controllers\SettingsController::class, 'updateWorkspace']);
 
             Route::middleware('company')->group(function () {
+                Route::post('branches/{branch}/restore', [\App\Domains\Organization\Controllers\BranchController::class, 'restore']);
+                Route::delete('branches/{branch}/force', [\App\Domains\Organization\Controllers\BranchController::class, 'forceDelete']);
                 Route::apiResource('branches', \App\Domains\Organization\Controllers\BranchController::class);
                 Route::apiResource('organization/policies', \App\Domains\Organization\Controllers\OrganizationPolicyController::class);
                 Route::patch('/company/settings', [\App\Domains\Organization\Controllers\SettingsController::class, 'updateCompany']);
 
                 Route::middleware('branch')->group(function () {
+                    Route::post('departments/{department}/restore', [\App\Domains\Organization\Controllers\DepartmentController::class, 'restore']);
+                    Route::delete('departments/{department}/force', [\App\Domains\Organization\Controllers\DepartmentController::class, 'forceDelete']);
                     Route::apiResource('departments', \App\Domains\Organization\Controllers\DepartmentController::class);
+
+                    Route::post('teams/{team}/restore', [\App\Domains\Organization\Controllers\TeamController::class, 'restore']);
+                    Route::delete('teams/{team}/force', [\App\Domains\Organization\Controllers\TeamController::class, 'forceDelete']);
                     Route::apiResource('teams', \App\Domains\Organization\Controllers\TeamController::class);
+
                     Route::patch('/branch/settings', [\App\Domains\Organization\Controllers\SettingsController::class, 'updateBranch']);
                 });
             });
         });
+
+        // User Transfers
+        Route::get('users/{user}/transfers', [\App\Domains\Organization\Controllers\TransferController::class, 'index']);
+        Route::post('users/{user}/transfers', [\App\Domains\Organization\Controllers\TransferController::class, 'store']);
     });
 });

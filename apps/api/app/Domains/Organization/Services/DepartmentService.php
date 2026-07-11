@@ -13,9 +13,14 @@ class DepartmentService
 
     public function list(Request $request): LengthAwarePaginator
     {
-        return Department::search($request, ['name', 'code'])
-            ->where('branch_id', $request->user()->branch_id)
-            ->paginate($request->input('per_page', 15));
+        $query = Department::search($request, ['name', 'code'])
+            ->where('branch_id', $request->user()->branch_id);
+
+        if ($request->boolean('with_archived')) {
+            $query->withTrashed();
+        }
+
+        return $query->paginate($request->input('per_page', 15));
     }
 
     public function create(array $data): Department
@@ -55,5 +60,30 @@ class DepartmentService
             'department.deleted',
             $department
         );
+    }
+
+    public function restore(string $id): Department
+    {
+        $department = Department::withTrashed()->findOrFail($id);
+        $department->restore();
+
+        $this->auditLogger->log(
+            'department.restored',
+            $department
+        );
+
+        return $department;
+    }
+
+    public function forceDelete(string $id): void
+    {
+        $department = Department::withTrashed()->findOrFail($id);
+
+        $this->auditLogger->log(
+            'department.permanently_deleted',
+            $department
+        );
+
+        $department->forceDelete();
     }
 }

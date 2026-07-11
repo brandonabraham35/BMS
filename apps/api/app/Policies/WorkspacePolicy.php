@@ -12,16 +12,16 @@ class WorkspacePolicy
 
     public function view(User $user, Workspace $workspace): bool
     {
-        return $user->workspace_id === $workspace->id;
+        return (string) $user->workspace_id === (string) $workspace->id;
     }
 
     public function update(User $user, Workspace $workspace): bool
     {
-        return $user->workspace_id === $workspace->id;
+        return (string) $user->workspace_id === (string) $workspace->id;
     }
 
     public function delete(User $user, Workspace $workspace): bool
     {
-        return $user->workspace_id === $workspace->id;
+        return (string) $user->workspace_id === (string) $workspace->id;
     }
 }

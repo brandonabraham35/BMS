@@ -5,22 +5,29 @@ namespace App\Domains\Organization\Policies\Services;
 use App\Models\OrganizationPolicy;
 use App\Domains\Organization\Tenant\TenantContext;
 use App\Domains\Organization\Policies\Contracts\PolicyRepositoryInterface;
+use App\Domains\Organization\Caching\Contracts\PolicyCacheInterface;
 
 class PolicyResolver
 {
     public function __construct(
         protected PolicyRepositoryInterface $repository,
-        protected TenantContext $tenantContext
+        protected TenantContext $tenantContext,
+        protected PolicyCacheInterface $cache
     ) {}
 
     public function resolve(string $type): ?OrganizationPolicy
     {
-        // Hierarchy: Branch -> Company -> Workspace -> Platform
         $contexts = $this->getHierarchyContexts();
 
         foreach ($contexts as $context) {
+            $cached = $this->cache->get($type, $context);
+            if ($cached) {
+                return $cached;
+            }
+
             $policy = $this->repository->find($type, $context);
             if ($policy) {
+                $this->cache->put($type, $policy, $context);
                 return $policy;
             }
         }
@@ -32,22 +39,24 @@ class PolicyResolver
     {
         $contexts = [];
 
-        // 1. Branch
-        if ($this->tenantContext->getBranchId()) {
-            $contexts[] = ['branch_id' => $this->tenantContext->getBranchId()];
+        if ($userId = $this->tenantContext->getUserId()) {
+            $contexts[] = ['user_id' => $userId];
         }
 
-        // 2. Company
-        if ($this->tenantContext->getCompanyId()) {
-            $contexts[] = ['company_id' => $this->tenantContext->getCompanyId()];
+        if ($branchId = $this->tenantContext->getBranchId()) {
+            $contexts[] = ['branch_id' => $branchId];
         }
 
-        // 3. Workspace
-        if ($this->tenantContext->getWorkspaceId()) {
-            $contexts[] = ['workspace_id' => $this->tenantContext->getWorkspaceId()];
+        $company = $this->tenantContext->getCompany();
+        while ($company) {
+            $contexts[] = ['company_id' => $company->id];
+            $company = $company->parent;
         }
 
-        // 4. Platform
+        if ($workspaceId = $this->tenantContext->getWorkspaceId()) {
+            $contexts[] = ['workspace_id' => $workspaceId];
+        }
+
         $contexts[] = [];
 
         return $contexts;

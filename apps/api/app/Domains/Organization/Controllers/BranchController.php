@@ -25,10 +25,9 @@ class BranchController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
+            'address' => 'nullable|string|max:500',
             'status' => 'nullable|string|in:active,inactive,archived',
         ]);
 
@@ -47,10 +46,8 @@ class BranchController extends Controller
     public function update(Request $request, \App\Models\Branch $branch): JsonResponse
     {
         $this->authorize('update', $branch);
-
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'code' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'status' => 'nullable|string|in:active,inactive,archived',
         ]);
@@ -64,5 +61,23 @@ class BranchController extends Controller
         $this->authorize('delete', $branch);
         $this->branchService->delete($branch);
         return $this->successResponse(null, 'Branch deleted successfully');
+    }
+
+    public function restore(string $id): JsonResponse
+    {
+        $branch = \App\Models\Branch::withTrashed()->findOrFail($id);
+        $this->authorize('update', $branch);
+
+        $branch = $this->branchService->restore($id);
+        return $this->successResponse(new BaseResource($branch), 'Branch restored successfully');
+    }
+
+    public function forceDelete(string $id): JsonResponse
+    {
+        $branch = \App\Models\Branch::withTrashed()->findOrFail($id);
+        $this->authorize('delete', $branch);
+
+        $this->branchService->forceDelete($id);
+        return $this->successResponse(null, 'Branch permanently deleted');
     }
 }

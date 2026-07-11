@@ -12,16 +12,16 @@ class DepartmentPolicy
 
     public function view(User $user, Department $department): bool
     {
-        return $user->branch_id === $department->branch_id;
+        return (string) $user->branch_id === (string) $department->branch_id;
     }
 
     public function update(User $user, Department $department): bool
     {
-        return $user->branch_id === $department->branch_id;
+        return (string) $user->branch_id === (string) $department->branch_id;
     }
 
     public function delete(User $user, Department $department): bool
     {
-        return $user->branch_id === $department->branch_id;
+        return (string) $user->branch_id === (string) $department->branch_id;
     }
 }

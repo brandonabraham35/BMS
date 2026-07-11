@@ -35,6 +35,11 @@ class OrganizationPolicyController extends Controller
         $user = $request->user();
         $data['workspace_id'] = $user->workspace_id;
 
+        // Auto-assign company/branch if in context and not specified
+        if (!isset($data['company_id']) && $user->company_id) {
+            $data['company_id'] = $user->company_id;
+        }
+
         $policy = $this->policyService->create($data);
         return $this->successResponse(new BaseResource($policy), 'Policy created successfully', 201);
     }
